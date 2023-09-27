@@ -6,16 +6,22 @@ pipeline {
             steps {
                 // Get some code from a GitHub repository
                 // Run Maven on a Unix agent.
-                sh "mvn -Dmaven.test.failure.ignore=true clean package"
+                configFileProvider([configFile(fileId: '8bb165e6-8f28-4b61-a443-1dd118a53225', variable: 'settingsxml')]) {
+                    withMaven(maven: 'M3') {
+                        sh 'mvn -Dmaven.test.failure.ignore=true clean package -s $settingsxml'
+                    }
+                }
                 // docker create image
-                sh "docker build . && docker ps"
+                sh "docker build --tag jfabella.jfrog.io/docker/test:1.0.0 ."
             }
         }
 
-        stage('Upload') {
+        
+
+        stage('Upload to JFrog') {
             steps { 
                 // docker push to nexus
-                sh "echo Uploading to Nexus"
+                sh "docker push jfabella.jfrog.io/docker/test:1.0.0"
             }
         }
     }
